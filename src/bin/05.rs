@@ -22,15 +22,10 @@ impl FromStr for Move {
     }
 }
 
-fn parse_input_parts(input: &str) -> (&str, &str) {
+fn parse_input_parts(input: &str) -> (Vec<Vec<char>>, Vec<Move>) {
     let mut input_parts = input.split("\n\n");
     let (stacks_input, moves_input) = (input_parts.next().unwrap(), input_parts.next().unwrap());
 
-    (stacks_input, moves_input)
-}
-
-pub fn part_one(input: &str) -> Option<String> {
-    let (stacks_input, moves_input) = parse_input_parts(input);
     let mut stacks: Vec<Vec<char>> = vec![Vec::new(); 9];
 
     let lines = stacks_input.lines().rev().skip(1);
@@ -49,6 +44,27 @@ pub fn part_one(input: &str) -> Option<String> {
         .lines()
         .map(|s| s.parse::<Move>().unwrap())
         .collect::<Vec<Move>>();
+
+    (stacks, moves)
+}
+
+fn get_top_crates(stacks: &Vec<Vec<char>>) -> String {
+    stacks
+        .iter()
+        .map(|s| {
+            let char = s.clone().pop();
+
+            match char {
+                Some(c) => c.to_string(),
+                None => "".to_string(),
+            }
+        })
+        .collect::<Vec<String>>()
+        .concat()
+}
+
+pub fn part_one(input: &str) -> Option<String> {
+    let (mut stacks, moves) = parse_input_parts(input);
 
     moves.iter().for_each(|m| {
         let mut from_stack = stacks[m.from as usize].clone();
@@ -63,42 +79,12 @@ pub fn part_one(input: &str) -> Option<String> {
         stacks[m.to as usize] = to_stack;
     });
 
-    let top_crates = stacks
-        .iter()
-        .map(|s| {
-            let char = s.clone().pop();
-
-            match char {
-                Some(c) => c.to_string(),
-                None => "".to_string(),
-            }
-        })
-        .collect::<Vec<String>>()
-        .concat();
-
+    let top_crates = get_top_crates(&stacks);
     Some(top_crates)
 }
 
 pub fn part_two(input: &str) -> Option<String> {
-    let (stacks_input, moves_input) = parse_input_parts(input);
-    let mut stacks: Vec<Vec<char>> = vec![Vec::new(); 9];
-
-    let lines = stacks_input.lines().rev().skip(1);
-    lines.for_each(|line| {
-        line.chars().enumerate().for_each(|(i, c)| {
-            if !c.is_alphabetic() {
-                return;
-            }
-            let stack_index = (i - 1) / 4;
-            // push into the stack
-            stacks[stack_index].push(c);
-        })
-    });
-
-    let moves = moves_input
-        .lines()
-        .map(|s| s.parse::<Move>().unwrap())
-        .collect::<Vec<Move>>();
+    let (mut stacks, moves) = parse_input_parts(input);
 
     moves.iter().for_each(|m| {
         let mut from_stack = stacks[m.from as usize].clone();
@@ -111,19 +97,7 @@ pub fn part_two(input: &str) -> Option<String> {
         stacks[m.to as usize] = to_stack;
     });
 
-    let top_crates = stacks
-        .iter()
-        .map(|s| {
-            let char = s.clone().pop();
-
-            match char {
-                Some(c) => c.to_string(),
-                None => "".to_string(),
-            }
-        })
-        .collect::<Vec<String>>()
-        .concat();
-
+    let top_crates = get_top_crates(&stacks);
     Some(top_crates)
 }
 
