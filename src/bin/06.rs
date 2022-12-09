@@ -3,7 +3,7 @@ fn get_signal_marker(signal: &str, length: usize) -> Option<usize> {
     'outer: while let Some(word) = signal.get(index..index + length) {
         for (i, c) in word.chars().enumerate() {
             if let Some(rest) = word.get(i + 1..) {
-                if let Some(idx_of_dup) = rest.find(c) {
+                if let Some(_idx_of_dup) = rest.find(c) {
                     // The rest of the string also contains the current
                     // character so we can increment the base index to the
                     // current index plus 1 and continue the outer loop.
