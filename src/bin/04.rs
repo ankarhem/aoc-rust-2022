@@ -30,8 +30,8 @@ impl FromStr for ElfPair {
         let second = sections.next().unwrap();
 
         Ok(ElfPair {
-            first: first,
-            second: second,
+            first,
+            second,
         })
     }
 }

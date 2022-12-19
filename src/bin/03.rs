@@ -4,14 +4,13 @@ pub fn part_one(input: &str) -> Option<u32> {
 
         let shared_char = first_half
             .chars()
-            .filter_map(|c| {
+            .find_map(|c| {
                 if second_half.contains(c) {
                     Some(c)
                 } else {
                     None
                 }
-            })
-            .next();
+            });
 
         match shared_char {
             Some(c) => {
@@ -46,14 +45,13 @@ pub fn part_two(input: &str) -> Option<u32> {
 
         let shared_char = first
             .chars()
-            .filter_map(|c| {
+            .find_map(|c| {
                 if second.contains(c) && third.contains(c) {
                     Some(c)
                 } else {
                     None
                 }
             })
-            .next()
             .unwrap();
 
         if shared_char.is_lowercase() {

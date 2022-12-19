@@ -1,143 +1,85 @@
-use std::ops::{Index, IndexMut};
+fn get_visible_trees(trees: Vec<Vec<u8>>) -> Vec<Vec<bool>> {
+    let max_length = trees.len() - 1;
+    let mut visible_trees: Vec<Vec<bool>> = trees
+        .iter()
+        .enumerate()
+        .map(|(row_idx, row)| {
+            let line_max_length = row.len() - 1;
+            row.iter()
+                .enumerate()
+                .map(|(col_idx, tree)| {
+                    row_idx == 0
+                        || row_idx == max_length
+                        || col_idx == 0
+                        || col_idx == line_max_length
+                })
+            .collect()
+        })
+    .collect();
 
-#[derive(Debug, PartialEq, Eq, Clone)]
-struct Visible {
-    west: bool,
-    north: bool,
-    east: bool,
-    south: bool,
-}
+    for row in 0..trees.len() {
+        let mut max_west = 0;
+        let mut max_east = 0;
+        let mut max_north = 0;
+        let mut max_south = 0;
 
-impl Index<&str> for Visible {
-    type Output = bool;
-
-    fn index(&self, index: &str) -> &Self::Output {
-        match index {
-            "west" => &self.west,
-            "north" => &self.north,
-            "east" => &self.east,
-            "south" => &self.south,
-            _ => panic!("Invalid direction {index}"),
-        }
-    }
-}
-
-impl IndexMut<&str> for Visible {
-    fn index_mut(&mut self, index: &str) -> &mut Self::Output {
-        match index {
-            "west" => &mut self.west,
-            "north" => &mut self.north,
-            "east" => &mut self.east,
-            "south" => &mut self.south,
-            _ => panic!("Invalid direction {index}"),
-        }
-    }
-}
-
-#[derive(Debug, PartialEq, Eq, Clone)]
-struct Tree {
-    visible: Visible,
-    height: u8,
-}
-
-impl Tree {
-    fn new(value: u8) -> Self {
-        Tree {
-            visible: Visible {
-                west: false,
-                north: false,
-                east: false,
-                south: false,
-            },
-            height: value,
-        }
-    }
-}
-
-fn set_visible(trees: Vec<Vec<Tree>>) -> Vec<Vec<Tree>> {
-    let mut new_trees = trees.clone();
-    let mut max_from_north = vec![0; trees[0].len()];
-    let mut max_from_south = vec![0; trees[0].len()];
-    for (row_idx, row) in trees.iter().enumerate() {
-        // From west
-        let mut max_height_from_west = 0;
-        let mut max_height_from_east = 0;
-        for (tree_idx, tree) in row.iter().enumerate() {
-            let west_tree = tree;
-            let east_tree = &row[row.len() - tree_idx - 1];
-            if tree_idx == 0 {
-                // WEST
-                new_trees[row_idx][tree_idx].visible["west"] = true;
-                max_height_from_west = west_tree.height;
-
-                //EAST
-                new_trees[row_idx][row.len() - tree_idx - 1].visible["east"] = true;
-                max_height_from_east = east_tree.height;
+        for col in 0..trees[0].len() {
+            let east_col_idx = trees[0].len() - 1 - col;
+            let south_row_idx = trees.len() - 1 - row;
+            if row == 0 {
+                max_west = trees[row][col];
+                max_east = trees[row][east_col_idx];
+                max_north = trees[col][row];
+                max_south = trees[col][south_row_idx];
             } else {
-                //WEST
-                if west_tree.height > max_height_from_west {
-                    new_trees[row_idx][tree_idx].visible["west"] = true;
-                    max_height_from_west = west_tree.height;
+                // WEST
+                if trees[row][col] > max_west {
+                    max_west = trees[row][col];
+                    visible_trees[row][col] = true;
                 }
 
-                //EAST
-                if east_tree.height > max_height_from_east {
-                    new_trees[row_idx][row.len() - tree_idx - 1].visible["east"] = true;
-                    max_height_from_east = east_tree.height;
+                // EAST
+                if trees[row][east_col_idx] > max_east {
+                    max_east = trees[row][east_col_idx];
+                    visible_trees[row][east_col_idx] = true;
                 }
-            }
 
-            let north_tree = tree;
-            let south_tree = &trees[trees.len() - row_idx - 1][tree_idx];
-            if row_idx == 0 {
                 // NORTH
-                new_trees[row_idx][tree_idx].visible["north"] = true;
-                max_from_north[tree_idx] = north_tree.height;
+                if trees[col][row] > max_north {
+                    max_north = trees[col][row];
+                    visible_trees[col][row] = true;
+                }
 
                 // SOUTH
-                new_trees[trees.len() - row_idx - 1][tree_idx].visible["south"] = true;
-                max_from_south[tree_idx] = south_tree.height;
-            } else {
-                //NORTH
-                if north_tree.height > max_from_north[tree_idx] {
-                    new_trees[tree_idx][row_idx].visible["north"] = true;
-                    max_from_north[tree_idx] = north_tree.height;
-                }
-
-                //SOUTH
-                if south_tree.height > max_from_south[tree_idx] {
-                    new_trees[trees.len() - row_idx - 1][tree_idx].visible["south"] = true;
-                    max_from_south[tree_idx] = south_tree.height;
+                if trees[col][south_row_idx] > max_south {
+                    max_south = trees[col][south_row_idx];
+                    visible_trees[col][south_row_idx] = true;
                 }
             }
         }
     }
-    new_trees
+
+    visible_trees
 }
 
-fn parse_input(input: &str) -> Vec<Vec<Tree>> {
-    let parsed_trees: Vec<Vec<Tree>> = input
+fn parse_input(input: &str) -> Vec<Vec<u8>> {
+    let parsed_trees: Vec<Vec<u8>> = input
         .lines()
         .map(|line| {
             line.chars()
-                .map(|c| Tree::new(c.to_digit(10).unwrap() as u8))
+                .map(|c| c.to_digit(10).unwrap() as u8)
                 .collect()
         })
-        .collect();
+    .collect();
 
-    let trees = set_visible(parsed_trees);
-
-    trees
+    parsed_trees
 }
 
 pub fn part_one(input: &str) -> Option<u32> {
     let trees = parse_input(input);
+    let visible_trees = get_visible_trees(trees);
 
-    let num_visible = trees
-        .iter()
-        .flatten()
-        .filter(|t| t.visible.east || t.visible.north || t.visible.south || t.visible.west)
-        .count();
+    let num_visible = visible_trees.iter().flatten().filter(|&&tree| tree).count();
 
     Some(num_visible as u32)
 }
